@@ -11,8 +11,8 @@ import UIKit
 class TweetCell: UITableViewCell {
     
     
-    @IBOutlet weak var retweetButton: UIButton!
     @IBOutlet weak var favoriteButton: UIButton!
+    @IBOutlet weak var retweetButton: UIButton!
     @IBOutlet weak var favoriteCountLabel: UILabel!
     @IBOutlet weak var retweetCountLabel: UILabel!
     @IBOutlet weak var tweetTextLabel: UILabel!
@@ -34,6 +34,7 @@ class TweetCell: UITableViewCell {
     
     var tweet: Tweet! {
         didSet {
+            print("Setting up tweet cell???")
             tweetTextLabel.text = tweet.text
             favoriteCountLabel.text = tweet.favoriteCount as? String
             retweetCountLabel.text = tweet.retweetCount as? String
