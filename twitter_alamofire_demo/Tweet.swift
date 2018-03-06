@@ -20,7 +20,7 @@ class Tweet {
     var user: User? // Contains name, screenname, etc. of tweet author
     var createdAtString: String? // Display date
     var retweetedByUser: User?  // user who retweeted if tweet is retweet
-    
+    var iconURL: URL?
     // MARK: - Create initializer with dictionary
     init(dictionary: [String: Any]) {
         var dictionary = dictionary
@@ -35,9 +35,9 @@ class Tweet {
         
         id = dictionary["id"] as? Int64
         text = dictionary["text"] as? String
-        favoriteCount = dictionary["favorite_count"] as? Int
+        favoriteCount = dictionary["favorite_count"] as! Int
         favorited = dictionary["favorited"] as? Bool
-        retweetCount = dictionary["retweet_count"] as? Int
+        retweetCount = dictionary["retweet_count"] as! Int
         retweeted = dictionary["retweeted"] as? Bool
         
         let user = dictionary["user"] as! [String: Any]

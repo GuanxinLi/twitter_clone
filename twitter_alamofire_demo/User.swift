@@ -13,10 +13,14 @@ class User {
     var name: String
     var screenName: String?
     static var current: User?
+    var iconString: String?
+    var iconUrl: URL?
     
     init(dictionary: [String: Any]) {
         name = dictionary["name"] as! String
         screenName = dictionary["screen_name"] as? String
+        iconString = dictionary["profile_image_url_https"] as? String
+        iconUrl = URL(string: iconString!)
 
     }
     

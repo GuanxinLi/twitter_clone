@@ -22,10 +22,9 @@ class TimelineViewController: UIViewController, UITableViewDelegate, UITableView
         
         //tableView.rowHeight = 300
         tableView.rowHeight = UITableViewAutomaticDimension
-        tableView.estimatedRowHeight = 150
+        tableView.estimatedRowHeight = 200
         APIManager.shared.getHomeTimeLine { (tweets, error) in
             if let tweets = tweets {
-                print("in Home timeline")
                 self.tweets = tweets
                 self.tableView.reloadData()
             } else if let error = error {
@@ -38,16 +37,13 @@ class TimelineViewController: UIViewController, UITableViewDelegate, UITableView
     }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        print("The number of rows is")
-        print(String(tweets.count))
-            return tweets.count
+        return tweets.count
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "TweetCell", for: indexPath) as! TweetCell
         let singleTweet = self.tweets[indexPath.row]
         if singleTweet != nil {
-            print("single tweet is not null")
             cell.tweet = singleTweet
         }
         return cell
