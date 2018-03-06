@@ -14,7 +14,6 @@ import KeychainAccess
 
 class APIManager: SessionManager {
     
-    // MARK: TODO: Add App Keys
     static let consumerKey = "AqV9Z0S3bJw1bc7tIvN32JFHL"
     static let consumerSecret = "eHfpYwo42DtMDNcryS4ExXJUyXJPzrEQpRaTXUi27msbTZRCEw"
 
@@ -24,12 +23,20 @@ class APIManager: SessionManager {
     
     static let callbackURLString = "alamoTwitter://"
     
+    let sessionManager = SessionManager.default
+    
     // MARK: Twitter API methods
     func login(success: @escaping () -> (), failure: @escaping (Error?) -> ()) {
         
         // Add callback url to open app when returning from Twitter login on web
         let callbackURL = URL(string: APIManager.callbackURLString)!
         oauthManager.authorize(withCallbackURL: callbackURL, success: { (credential, _response, parameters) in
+            // 1. Handle successful authentication
+            let keychain = Keychain()
+            keychain["token_key"] = credential.oauthToken
+            keychain["secret_key"] = credential.oauthTokenSecret
+            print("token: \(credential.oauthToken)")
+            print("secret: \(credential.oauthTokenSecret)")
             
             // Save Oauth tokens
             self.save(credential: credential)
@@ -41,7 +48,7 @@ class APIManager: SessionManager {
                     print("Welcome \(user.name)")
                     
                     // MARK: TODO: set User.current, so that it's persisted
-                    
+                    User.current = user
                     success()
                 }
             })
@@ -52,9 +59,11 @@ class APIManager: SessionManager {
     
     func logout() {
         clearCredentials()
+         // 1. Clear current user
+         User.current = nil
+        // TODO: 2. Deauthorize OAuth tokens
         
-        // TODO: Clear current user by setting it to nil
-
+        // 3. Post logout notification
         NotificationCenter.default.post(name: NSNotification.Name("didLogout"), object: nil)
     }
 
@@ -80,6 +89,7 @@ class APIManager: SessionManager {
 
         // This uses tweets from disk to avoid hitting rate limit. Comment out if you want fresh
         // tweets,
+        /*
         if let data = UserDefaults.standard.object(forKey: "hometimeline_tweets") as? Data {
             let tweetDictionaries = NSKeyedUnarchiver.unarchiveObject(with: data) as! [[String: Any]]
             let tweets = tweetDictionaries.flatMap({ (dictionary) -> Tweet in
@@ -88,7 +98,7 @@ class APIManager: SessionManager {
 
             completion(tweets, nil)
             return
-        }
+        }*/
 
         request(URL(string: "https://api.twitter.com/1.1/statuses/home_timeline.json")!, method: .get)
             .validate()
@@ -117,17 +127,68 @@ class APIManager: SessionManager {
         }
     }
     
-    // MARK: TODO: Favorite a Tweet
+    // MARK: Favorite a Tweet
+    func favorite(_ tweet: Tweet, completion: @escaping (Tweet?, Error?) -> ()) {
+        let urlString = "https://api.twitter.com/1.1/favorites/create.json"
+        let parameters = ["id": tweet.id]
+        request(urlString, method: .post, parameters: parameters, encoding: URLEncoding.queryString).validate().responseJSON { (response) in
+            if response.result.isSuccess,
+                let tweetDictionary = response.result.value as? [String: Any] {
+                let tweet = Tweet(dictionary: tweetDictionary)
+                completion(tweet, nil)
+            } else {
+                completion(nil, response.result.error)
+            }
+        }
+    }
     
-    // MARK: TODO: Un-Favorite a Tweet
     
-    // MARK: TODO: Retweet
+    // MARK: Un-Favorite a Tweet
+    func unfavorite(_ tweet: Tweet, completion: @escaping (Tweet?, Error?) -> ()) {
+        let urlString = "https://api.twitter.com/1.1/favorites/destroy.json"
+        let parameters = ["id": tweet.id]
+        request(urlString, method: .post, parameters: parameters, encoding: URLEncoding.queryString).validate().responseJSON { (response) in
+            if response.result.isSuccess,
+                let tweetDictionary = response.result.value as? [String: Any] {
+                let tweet = Tweet(dictionary: tweetDictionary)
+                completion(tweet, nil)
+            } else {
+                completion(nil, response.result.error)
+            }
+        }
+    }
     
-    // MARK: TODO: Un-Retweet
-    
+    // MARK: Retweet
+    func retweet(_ tweet: Tweet, completion: @escaping (Tweet?, Error?) -> ()) {
+        let urlString = "https://api.twitter.com/1.1/statuses/retweet/:id.json"
+        let parameters = ["id": tweet.id]
+        request(urlString, method: .post, parameters: parameters, encoding: URLEncoding.queryString).validate().responseJSON { (response) in
+            if response.result.isSuccess,
+                let tweetDictionary = response.result.value as? [String: Any] {
+                let tweet = Tweet(dictionary: tweetDictionary)
+                completion(tweet, nil)
+            } else {
+                completion(nil, response.result.error)
+            }
+        }
+    }
+    // MARK: Un-Retweet
+    func unretweet(_ tweet: Tweet, completion: @escaping (Tweet?, Error?) -> ()) {
+        let urlString = "https://api.twitter.com/1.1/statuses/unretweet/:id.json"
+        let parameters = ["id": tweet.id]
+        request(urlString, method: .post, parameters: parameters, encoding: URLEncoding.queryString).validate().responseJSON { (response) in
+            if response.result.isSuccess,
+                let tweetDictionary = response.result.value as? [String: Any] {
+                let tweet = Tweet(dictionary: tweetDictionary)
+                completion(tweet, nil)
+            } else {
+                completion(nil, response.result.error)
+            }
+        }
+    }
     // MARK: TODO: Compose Tweet
     
-    // MARK: TODO: Get User Timeline
+    // MARK: TODO: er User Timeline
     
     
     //--------------------------------------------------------------------------------//
@@ -159,6 +220,7 @@ class APIManager: SessionManager {
         
         // Assign oauth request adapter to Alamofire SessionManager adapter to sign requests
         adapter = oauthManager.requestAdapter
+        sessionManager.adapter = adapter
     }
     
     // MARK: Handle url

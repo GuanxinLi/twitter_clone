@@ -16,12 +16,16 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
         
-        // MARK: TODO: Check for logged in user
+        let storyboard = UIStoryboard(name: "Main", bundle: nil)
+        
+        if User.current != nil {
+            let loginVC = storyboard.instantiateViewController(withIdentifier: "LoginViewController")
+            self.window?.rootViewController = loginVC
+        }
         
         NotificationCenter.default.addObserver(forName: Notification.Name("didLogout"), object: nil, queue: OperationQueue.main) { (Notification) in
             print("Logout notification received")
-            let storyboard = UIStoryboard(name: "Main", bundle: nil)
-            let loginVC = storyboard.instantiateViewController(withIdentifier: "LoginViewController")
+            let loginVC = storyboard.instantiateInitialViewController()
             self.window?.rootViewController = loginVC
         }
         
@@ -31,6 +35,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     // MARK: TODO: Open URL
     // OAuth step 2
     func application(_ app: UIApplication, open url: URL, options: [UIApplicationOpenURLOptionsKey : Any] = [:]) -> Bool {
+         print("url: \(url.description)")
+        
         // Handle urlcallback sent from Twitter
         APIManager.shared.handle(url: url)
         return true

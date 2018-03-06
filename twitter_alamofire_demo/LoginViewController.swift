@@ -30,6 +30,7 @@ class LoginViewController: UIViewController {
             self.performSegue(withIdentifier: "loginSegue", sender: nil)
         }) { (error) in
             if let error = error {
+                //print("The error is here -- did tap login")
                 print(error.localizedDescription)
             }
         }
